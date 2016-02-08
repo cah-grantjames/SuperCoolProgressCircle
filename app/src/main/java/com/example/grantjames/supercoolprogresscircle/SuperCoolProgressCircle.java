@@ -4,23 +4,24 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.RectF;
-import android.os.Handler;
 import android.util.AttributeSet;
 import android.view.View;
-
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class SuperCoolProgressCircle extends View {
 
     private RectF bounds;
     private PointF center;
     private Paint paint;
-    float radius = 100;
+    private float radius;
     private float progress = 0f;
-    private Handler handler = new Handler();
+    private Point circlePoint;
+    private Paint circlePaint;
+    private Paint innerCirclePaint;
+    private int lineColor = Color.GREEN;
+    private int backgroundColor = Color.WHITE;
 
     public SuperCoolProgressCircle(Context context) {
         super(context);
@@ -39,45 +40,70 @@ public class SuperCoolProgressCircle extends View {
 
     public void init() {
         bounds = new RectF();
-        center = new PointF(200, 200);
+        center = new PointF(1, 1);
+        circlePoint = new Point(0, 0);
         paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        paint.setColor(Color.WHITE);
+        paint.setColor(lineColor);
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeWidth(6f);
-        new Timer().scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        SuperCoolProgressCircle.this.inc();
-                    }
-                });
-            }
-        }, 30L, 30L);
+        paint.setTextSize(55f);
+        circlePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        circlePaint.setColor(lineColor);
+        innerCirclePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        innerCirclePaint.setColor(backgroundColor);
     }
+
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        canvas.drawColor(Color.BLUE);
+        canvas.drawColor(Color.WHITE);
         center.x = canvas.getWidth() / 2f;
         center.y = canvas.getHeight() / 2f;
-        radius = 100;
+        radius = center.x * .9f;
+        float strokeWidth = radius * .05f;
+        paint.setStrokeWidth(strokeWidth);
+
         bounds.set(center.x - radius, center.y - radius, center.x + radius, center.y + radius);
         int startAngle = -90;
-        int sweepAngle = (int) (360f * getProgress());
+        int sweepAngle = (int) (360f * progress);
+
         canvas.drawArc(bounds, startAngle, sweepAngle, false, paint);
+        //~~
+        float circlePointAngle = 90 + (-360f * progress);
+        double circlePointAngleRad = circlePointAngle * Math.PI / 180;
+        circlePoint.x = (int) (center.x + (radius * Math.cos(circlePointAngleRad)));
+        circlePoint.y = (int) (center.y - (radius * Math.sin(circlePointAngleRad)));
+        canvas.drawCircle(circlePoint.x, circlePoint.y, 1.1f * strokeWidth, circlePaint);
+        canvas.drawCircle(circlePoint.x, circlePoint.y, strokeWidth * .7f, innerCirclePaint);
+        //~~
     }
 
-    private float getProgress() {
-        return progress;
+    public int getBackgroundColor() {
+        return backgroundColor;
+    }
+
+    @Override
+    public void setBackgroundColor(int backgroundColor) {
+        this.backgroundColor = backgroundColor;
+    }
+
+    public int getLineColor() {
+        return lineColor;
+    }
+
+    public void setLineColor(int lineColor) {
+        this.lineColor = lineColor;
     }
 
     public void inc() {
         float p = progress + .01f;
-        p = p > 1 ? 0 : p;
-        progress = p;
+
+        setProgress(p);
         invalidate();
+    }
+
+    public void setProgress(float progress) {
+        this.progress = progress > 1 ? 0 : progress;
     }
 }
