@@ -11,12 +11,20 @@ import android.util.AttributeSet;
 import android.view.View;
 
 public class SuperCoolProgressCircle extends View {
-
+    public static final float MIN_SPEED = 0.0025f;
+    public static final float MAX_SPEED = 0.03f;
+    public static final float START_SPEED = MAX_SPEED;
+    public static final float ACCEL = -0.03f;
+    public static final float SIZE_PERCENT_OF_WIDTH = .8f;
+    private float acceleration = ACCEL;
+    private float speed = START_SPEED;
     private RectF bounds;
     private PointF center;
     private Paint paint;
     private float radius;
-    private float progress = 0f;
+    private float actualProgress = 0f;
+    private float currentProgress = 0f;
+
     private Point circlePoint;
     private Paint circlePaint;
     private Paint innerCirclePaint;
@@ -48,6 +56,7 @@ public class SuperCoolProgressCircle extends View {
         paint.setTextSize(55f);
         circlePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         innerCirclePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        reset();
     }
 
 
@@ -60,17 +69,17 @@ public class SuperCoolProgressCircle extends View {
         canvas.drawColor(backgroundColor);
         center.x = canvas.getWidth() / 2f;
         center.y = canvas.getHeight() / 2f;
-        radius = center.x * .9f;
+        radius = center.x * SIZE_PERCENT_OF_WIDTH;
         float strokeWidth = radius * .05f;
         paint.setStrokeWidth(strokeWidth);
 
         bounds.set(center.x - radius, center.y - radius, center.x + radius, center.y + radius);
         int startAngle = -90;
-        int sweepAngle = (int) (360f * progress);
+        int sweepAngle = (int) (360f * currentProgress);
 
         canvas.drawArc(bounds, startAngle, sweepAngle, false, paint);
         //~~
-        float circlePointAngle = 90 + (-360f * progress);
+        float circlePointAngle = 90 + (-360f * currentProgress);
         double circlePointAngleRad = circlePointAngle * Math.PI / 180;
         circlePoint.x = (int) (center.x + (radius * Math.cos(circlePointAngleRad)));
         circlePoint.y = (int) (center.y - (radius * Math.sin(circlePointAngleRad)));
@@ -79,13 +88,31 @@ public class SuperCoolProgressCircle extends View {
         //~~
     }
 
-    public int getBackgroundColor() {
-        return backgroundColor;
+    public void reset() {
+        currentProgress = 0f;
+        speed = START_SPEED;
+    }
+
+    public void onTimePassed() {
+        increment(speed);
+        speed *= (1 + acceleration);
+        speed = speed > MAX_SPEED ? MAX_SPEED : speed;
+        speed = speed < MIN_SPEED ? MIN_SPEED : speed;
+    }
+
+    public void increment(float delta) {
+        float p = currentProgress + delta;
+        setCurrentProgress(p);
+        invalidate();
     }
 
     @Override
     public void setBackgroundColor(int backgroundColor) {
         this.backgroundColor = backgroundColor;
+    }
+
+    public int getBackgroundColor() {
+        return backgroundColor;
     }
 
     public int getLineColor() {
@@ -96,14 +123,19 @@ public class SuperCoolProgressCircle extends View {
         this.lineColor = lineColor;
     }
 
-    public void inc(float v) {
-        float p = progress + v;
 
-        setProgress(p);
-        invalidate();
+    public void setCurrentProgress(float currentProgress) {
+        this.currentProgress = currentProgress >= actualProgress ? actualProgress : currentProgress;
     }
 
-    public void setProgress(float progress) {
-        this.progress = progress > 1 ? 0 : progress;
+    public float getActualProgress() {
+        return actualProgress;
     }
+
+    public void setActualProgress(float actualProgress) {
+        this.actualProgress = actualProgress;
+        this.acceleration = ACCEL / actualProgress;
+    }
+
+
 }
