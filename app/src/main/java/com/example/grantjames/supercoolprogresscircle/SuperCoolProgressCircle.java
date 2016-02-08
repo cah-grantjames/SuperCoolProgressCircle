@@ -43,21 +43,21 @@ public class SuperCoolProgressCircle extends View {
         center = new PointF(1, 1);
         circlePoint = new Point(0, 0);
         paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        paint.setColor(lineColor);
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeWidth(6f);
         paint.setTextSize(55f);
         circlePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        circlePaint.setColor(lineColor);
         innerCirclePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        innerCirclePaint.setColor(backgroundColor);
     }
 
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        canvas.drawColor(Color.WHITE);
+        paint.setColor(lineColor);
+        circlePaint.setColor(lineColor);
+        innerCirclePaint.setColor(backgroundColor);
+        canvas.drawColor(backgroundColor);
         center.x = canvas.getWidth() / 2f;
         center.y = canvas.getHeight() / 2f;
         radius = center.x * .9f;
@@ -96,8 +96,8 @@ public class SuperCoolProgressCircle extends View {
         this.lineColor = lineColor;
     }
 
-    public void inc() {
-        float p = progress + .01f;
+    public void inc(float v) {
+        float p = progress + v;
 
         setProgress(p);
         invalidate();
