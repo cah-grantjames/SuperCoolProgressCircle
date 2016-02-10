@@ -5,23 +5,9 @@
     android:background="#000"
     android:orientation="vertical">
 
-    <com.example.grantjames.supercoolprogresscircle.SuperCoolProgressCircle
-        android:id="@+id/supercool1"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
-        android:layout_centerHorizontal="true" />
-
-    <com.example.grantjames.supercoolprogresscircle.SuperCoolProgressCircle
-        android:id="@+id/supercool2"
+    <com.example.grantjames.supercoolprogresscircle.ProgressCircleView
+        android:id="@+id/supercool3"
         android:layout_width="300dp"
         android:layout_height="300dp"
-        android:layout_below="@+id/supercool1"
-        android:layout_centerHorizontal="true" />
-
-    <com.example.grantjames.supercoolprogresscircle.SuperCoolProgressCircle
-        android:id="@+id/supercool3"
-        android:layout_width="500dp"
-        android:layout_height="500dp"
-        android:layout_below="@+id/supercool2"
-        android:layout_centerHorizontal="true" />
+        android:layout_centerInParent="true" />
 </RelativeLayout>

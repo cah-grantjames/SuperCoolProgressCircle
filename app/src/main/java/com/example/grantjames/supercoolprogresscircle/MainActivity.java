@@ -12,29 +12,17 @@ import java.util.TimerTask;
 public class MainActivity extends AppCompatActivity {
     private Handler handler = new Handler();
     private Timer timer;
-    private SuperCoolProgressCircle superCoolProgressCircle1;
-    private SuperCoolProgressCircle superCoolProgressCircle2;
-    private SuperCoolProgressCircle superCoolProgressCircle3;
+    private ProgressCircleView progressCircleView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        superCoolProgressCircle1 = (SuperCoolProgressCircle) findViewById(R.id.supercool1);
-        superCoolProgressCircle1.reset();
-        superCoolProgressCircle1.setActualProgress((float).3);
-        superCoolProgressCircle1.setLineColor(Color.GREEN);
-
-        superCoolProgressCircle2 = (SuperCoolProgressCircle) findViewById(R.id.supercool2);
-        superCoolProgressCircle2.reset();
-        superCoolProgressCircle2.setActualProgress((float).6);
-        superCoolProgressCircle2.setLineColor(Color.rgb(255, 0, 0));
-
-        superCoolProgressCircle3 = (SuperCoolProgressCircle) findViewById(R.id.supercool3);
-        superCoolProgressCircle3.reset();
-        superCoolProgressCircle3.setActualProgress((float) 1);
-        superCoolProgressCircle3.setLineColor(Color.rgb(255, 140, 0));
+        progressCircleView = (ProgressCircleView) findViewById(R.id.supercool3);
+        progressCircleView.reset();
+        progressCircleView.setActualProgress((float) 1);
+        progressCircleView.setLineColor(Color.rgb(0, 0, 0));
     }
 
     @Override
@@ -52,9 +40,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         if (event.getAction() == MotionEvent.ACTION_UP) {
-            superCoolProgressCircle1.reset();
-            superCoolProgressCircle2.reset();
-            superCoolProgressCircle3.reset();
+            progressCircleView.reset();
         }
         return super.onTouchEvent(event);
     }
@@ -67,9 +53,7 @@ public class MainActivity extends AppCompatActivity {
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
-                        superCoolProgressCircle1.onTimePassed();
-                        superCoolProgressCircle2.onTimePassed();
-                        superCoolProgressCircle3.onTimePassed();
+                        progressCircleView.onUpdate();
                     }
                 });
             }
