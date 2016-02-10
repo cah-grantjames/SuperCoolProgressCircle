@@ -12,28 +12,48 @@ import android.view.View;
 
 public class ProgressCircleView extends View {
     //Size
-    public static final float SIZE_PERCENT_OF_WIDTH = 90f;
-    public static final float PERCENT_CIRCLE_RADIUS_OF_FULL_RADIUS = 8.33f;
-    public static final float PERCENT_INNER_CIRCLE_RADIUS_OF_CIRCLE_RADIUS = 70f;
+    public static final float ARC_SIZE_PERCENT_OF_WIDTH = .9f;
+    public static final float PERCENT_LITTLE_CIRCLE_RADIUS_OF_FULL_RADIUS = .084f;
+    public static final float PERCENT_LITTLE_INNER_CIRCLE_RADIUS_OF_LITTLE_CIRCLE_RADIUS = .7f;
     //
-    public static final float MIN_SPEED = 0.0025f;
+    public static final float MIN_SPEED = 0.0005f;
     public static final float MAX_SPEED = 0.03f;
     public static final float START_SPEED = MAX_SPEED;
-    public static final float ACCEL = -0.03f;
-    private float acceleration = ACCEL;
-    private float speed = START_SPEED;
-    private RectF bounds;
-    private PointF center;
-    private Paint paint;
-    private float radius;
-    private float actualProgress = 0f;
-    private float currentProgress = 0f;
+    public static final float ACCEL = -0.13f;
+    public static final int START_ANGLE = -90;
+    public static final float PERCENT_STROKE_SIZE_OF_RADIUS = .05f;
+    float acceleration = ACCEL;
+    float speed = START_SPEED;
+    RectF bounds;
+    PointF center;
+    Paint paint;
+    float radius;
+    float actualProgress = 0f;
 
-    private Point circlePoint;
-    private Paint circlePaint;
-    private Paint innerCirclePaint;
-    private int lineColor = Color.GREEN;
-    private int backgroundColor = Color.WHITE;
+    float currentProgress = 0f;
+    Point littleCirclePoint;
+    Paint circlePaint;
+    Paint innerCirclePaint;
+    int lineColor = Color.GREEN;
+    int backgroundColor = Color.WHITE;
+    private int savedWidth = -1;
+    private int savedHeight = -1;
+    private float littleRadius;
+    private float innerLittleCircleRadius;
+
+    public ProgressCircleView(Context context, Paint paint, Paint circlePaint, Paint innerCirclePaint) {
+        super(context);
+        this.paint = paint;
+        this.circlePaint = circlePaint;
+        this.innerCirclePaint = innerCirclePaint;
+        bounds = new RectF();
+        center = new PointF(1, 1);
+        littleCirclePoint = new Point(0, 0);
+        this.paint.setStyle(Paint.Style.STROKE);
+        this.paint.setStrokeWidth(6f);
+        this.paint.setTextSize(55f);
+        reset();
+    }
 
     public ProgressCircleView(Context context) {
         super(context);
@@ -53,7 +73,7 @@ public class ProgressCircleView extends View {
     public void init() {
         bounds = new RectF();
         center = new PointF(1, 1);
-        circlePoint = new Point(0, 0);
+        littleCirclePoint = new Point(0, 0);
         paint = new Paint(Paint.ANTI_ALIAS_FLAG);
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeWidth(6f);
@@ -67,36 +87,82 @@ public class ProgressCircleView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
+        canvas.drawColor(backgroundColor);
+        int width = canvas.getWidth();
+        int height = canvas.getHeight();
+
+        boolean dimmensionsHaveChanged = width != savedWidth || height != savedHeight;
+        if (dimmensionsHaveChanged) {
+            calculateCenter(width, height);
+            calculateRadiusAndBounds();
+            handleEditMode();
+            paint.setStrokeWidth(radius * PERCENT_STROKE_SIZE_OF_RADIUS);
+            littleRadius = this.radius * PERCENT_LITTLE_CIRCLE_RADIUS_OF_FULL_RADIUS;
+            innerLittleCircleRadius = littleRadius *
+                    PERCENT_LITTLE_INNER_CIRCLE_RADIUS_OF_LITTLE_CIRCLE_RADIUS;
+            savedWidth = width;
+            savedHeight = height;
+        }
+
+        setPaintColors();
+        //Little circle calculate every time
+        calculateLittleCirclePoint();
+
+        canvas.drawArc(bounds, START_ANGLE, (360f * currentProgress), false, paint);
+        canvas.drawCircle(littleCirclePoint.x, littleCirclePoint.y, littleRadius, circlePaint);
+        canvas.drawCircle(littleCirclePoint.x, littleCirclePoint.y, innerLittleCircleRadius, innerCirclePaint);
+    }
+
+    private void calculateRadiusAndBounds() {
+        radius = center.x * ARC_SIZE_PERCENT_OF_WIDTH;
+        bounds.set(center.x - radius, center.y - radius, center.x + radius, center.y + radius);
+    }
+
+    private void calculateCenter(float width, float height) {
+        center.x = width / 2f;
+        center.y = height / 2f;
+    }
+
+    private void handleEditMode() {
+        if (isInEditMode()) {
+            int width = (int) (310 / .75f);
+            int height = (int) (310 / .75f);
+            calculateCenter(width, height);
+            currentProgress = .7f;
+            actualProgress = currentProgress;
+            lineColor = Color.MAGENTA;
+            backgroundColor = Color.argb(40, 200, 0, 0);
+            calculateRadiusAndBounds();
+        }
+    }
+
+    private void setPaintColors() {
         paint.setColor(lineColor);
         circlePaint.setColor(lineColor);
-        innerCirclePaint.setColor(backgroundColor);
-        canvas.drawColor(backgroundColor);
-        center.x = canvas.getWidth() / 2f;
-        center.y = canvas.getHeight() / 2f;
-
-        radius = center.x * SIZE_PERCENT_OF_WIDTH/100f;
-        float strokeWidth = radius * .05f;
-        paint.setStrokeWidth(strokeWidth);
-
-        bounds.set(center.x - radius, center.y - radius, center.x + radius, center.y + radius);
-        int startAngle = -90;
-        int sweepAngle = (int) (360f * currentProgress);
-
-        canvas.drawArc(bounds, startAngle, sweepAngle, false, paint);
-        //~~
-        float circlePointAngle = 90 + (-360f * currentProgress);
-        double circlePointAngleRad = circlePointAngle * Math.PI / 180;
-        circlePoint.x = (int) (center.x + (radius * Math.cos(circlePointAngleRad)));
-        circlePoint.y = (int) (center.y - (radius * Math.sin(circlePointAngleRad)));
-
-        float circleRadius = this.radius * PERCENT_CIRCLE_RADIUS_OF_FULL_RADIUS/100f;
-        canvas.drawCircle(circlePoint.x, circlePoint.y, circleRadius, circlePaint);
-        canvas.drawCircle(circlePoint.x, circlePoint.y, circleRadius *
-                PERCENT_INNER_CIRCLE_RADIUS_OF_CIRCLE_RADIUS/100f, innerCirclePaint);
-        //~~
-        if(isInEditMode()){
-            canvas.drawColor(Color.MAGENTA);
+        if (isInEditMode()) {
+            innerCirclePaint.setColor(Color.CYAN);
+        } else {
+            innerCirclePaint.setColor(backgroundColor);
         }
+    }
+
+    private void calculateLittleCirclePoint() {
+        double circlePointAngleRad = getCirclePointAngleRad();
+        littleCirclePoint.x = calculateCirclePointX(circlePointAngleRad);
+        littleCirclePoint.y = calculateCirclePointY(circlePointAngleRad);
+    }
+
+    int calculateCirclePointX(double circlePointAngleRad) {
+        return (int) (center.x + (radius * Math.cos(circlePointAngleRad)));
+    }
+
+    int calculateCirclePointY(double circlePointAngleRad) {
+        return (int) (center.y - (radius * Math.sin(circlePointAngleRad)));
+    }
+
+    double getCirclePointAngleRad() {
+        float circlePointAngle = 90 + (-360f * currentProgress);
+        return circlePointAngle * Math.PI / 180;
     }
 
     public void reset() {
@@ -106,7 +172,9 @@ public class ProgressCircleView extends View {
 
     public void onUpdate() {
         increment(speed);
-        speed *= (1 + acceleration);
+        if ((currentProgress/actualProgress) > 0.8f) {
+            speed *= (1 + acceleration);
+        }
         speed = speed > MAX_SPEED ? MAX_SPEED : speed;
         speed = speed < MIN_SPEED ? MIN_SPEED : speed;
     }
@@ -150,6 +218,5 @@ public class ProgressCircleView extends View {
         this.acceleration = ACCEL / actualProgress;
         invalidate();
     }
-
 
 }

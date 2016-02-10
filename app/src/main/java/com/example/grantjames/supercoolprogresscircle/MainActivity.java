@@ -41,6 +41,7 @@ public class MainActivity extends AppCompatActivity {
     public boolean onTouchEvent(MotionEvent event) {
         if (event.getAction() == MotionEvent.ACTION_UP) {
             progressCircleView.reset();
+            progressCircleView.setActualProgress((float) Math.random());
         }
         return super.onTouchEvent(event);
     }
